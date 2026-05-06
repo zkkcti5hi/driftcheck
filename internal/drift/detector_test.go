@@ -85,3 +85,35 @@ func TestDetect_ClientError(t *testing.T) {
 		t.Error("expected error from client, got nil")
 	}
 }
+
+func TestDetect_MultipleServices(t *testing.T) {
+	client := &docker.MockClient{
+		Containers: []docker.ContainerInfo{
+			runningContainer("abc123", "nginx:1.25", "web"),
+			runningContainer("def456", "redis:7.0", "cache"),
+		},
+	}
+	compose := &manifest.ComposeFile{
+		Services: map[string]manifest.Service{
+			"web":   {Image: "nginx:1.25"},
+			"cache": {Image: "redis:6.2"}, // intentional mismatch
+		},
+	}
+	detector := drift.NewDetector(client)
+	results, err := detector.Detect(compose)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(results))
+	}
+	driftedCount := 0
+	for _, r := range results {
+		if r.Drifted {
+			driftedCount++
+		}
+	}
+	if driftedCount != 1 {
+		t.Errorf("expected 1 drifted service, got %d", driftedCount)
+	}
+}
