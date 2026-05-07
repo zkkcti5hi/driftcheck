@@ -26,6 +26,14 @@ func TestSummarise(t *testing.T) {
 	}
 }
 
+func TestSummarise_Empty(t *testing.T) {
+	s := drift.Summarise([]drift.DriftResult{})
+	if s.Total != 0 || s.Clean != 0 || s.Drifted != 0 {
+		t.Errorf("expected all zeros for empty input, got Total=%d Clean=%d Drifted=%d",
+			s.Total, s.Clean, s.Drifted)
+	}
+}
+
 func TestWriteReport_ContainsDriftedLabel(t *testing.T) {
 	results := []drift.DriftResult{
 		{ServiceName: "web", ContainerID: "abc123def456", Drifted: true,
