@@ -44,6 +44,20 @@ func TestFilter_EmptyCandidates(t *testing.T) {
 	}
 }
 
+// TestFilter_PreservesOrder ensures that Filter returns results in the same
+// order as they appear in the candidates slice, not the allow-list order.
+func TestFilter_PreservesOrder(t *testing.T) {
+	candidates := []string{"alpha", "beta", "gamma", "delta"}
+	opts := filter.Options{Services: []string{"delta", "alpha"}}
+	got := filter.Filter(candidates, opts)
+	if len(got) != 2 {
+		t.Fatalf("expected 2 results, got %d: %v", len(got), got)
+	}
+	if got[0] != "alpha" || got[1] != "delta" {
+		t.Errorf("expected [alpha delta] in candidate order, got %v", got)
+	}
+}
+
 func TestMatchLabels_AllMatch(t *testing.T) {
 	container := map[string]string{"env": "prod", "team": "platform"}
 	required := map[string]string{"env": "prod"}
