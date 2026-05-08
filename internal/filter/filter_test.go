@@ -58,6 +58,17 @@ func TestFilter_PreservesOrder(t *testing.T) {
 	}
 }
 
+// TestFilter_DuplicatesInAllowList ensures that duplicate entries in the
+// allow-list do not cause a candidate to appear more than once in the result.
+func TestFilter_DuplicatesInAllowList(t *testing.T) {
+	candidates := []string{"web", "db", "cache"}
+	opts := filter.Options{Services: []string{"web", "web", "db"}}
+	got := filter.Filter(candidates, opts)
+	if len(got) != 2 {
+		t.Fatalf("expected 2 results (no duplicates), got %d: %v", len(got), got)
+	}
+}
+
 func TestMatchLabels_AllMatch(t *testing.T) {
 	container := map[string]string{"env": "prod", "team": "platform"}
 	required := map[string]string{"env": "prod"}
