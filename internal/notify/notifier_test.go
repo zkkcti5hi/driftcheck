@@ -43,6 +43,25 @@ func TestNotify_SendsDriftedResults(t *testing.T) {
 	}
 }
 
+func TestNotify_SendsCorrectDriftedServices(t *testing.T) {
+	var received map[string]interface{}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &received)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	wh := notify.NewWebhook(ts.URL, 5*time.Second)
+	err := wh.Notify([]drift.Result{driftedResult("api"), driftedResult("worker"), cleanResult("db")})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if received["drift_count"].(float64) != 2 {
+		t.Errorf("expected drift_count=2, got %v", received["drift_count"])
+	}
+}
+
 func TestNotify_SkipsWhenNoDrift(t *testing.T) {
 	called := false
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
