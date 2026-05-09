@@ -103,3 +103,17 @@ spec:
 		t.Fatal("expected error for no containers, got nil")
 	}
 }
+
+func TestParseK8sManifest_InvalidYAML(t *testing.T) {
+	invalidYAML := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken
+  invalid: [unclosed
+`
+	path := writeK8sTempFile(t, invalidYAML)
+	_, err := ParseK8sManifest(path)
+	if err == nil {
+		t.Fatal("expected error for invalid YAML, got nil")
+	}
+}
